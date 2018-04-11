@@ -1,0 +1,8 @@
+.vs/
+build/
+*.cmake
+CMakeFiles
+Doxyfile
+bin/
+Makefile
+CMakeCache.txt

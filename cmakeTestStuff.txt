@@ -1,0 +1,177 @@
+#[[
+#CMAKE FOR GLFW GLEW 
+cmake_minimum_required (VERSION 3.8)
+if(SRC)
+  get_filename_component(projectname ${SRC} NAME_WE)
+else()
+  set(projectname IMT2531)
+endif(SRC)
+
+project(${projectname})
+set( EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin )
+
+
+message( "system name is: " ${CMAKE_SYSTEM} )
+message( "system processor is: " ${CMAKE_SYSTEM_PROCESSOR} )
+
+
+message( "PROJECT_BINARY_DIR " ${PROJECT_BINARY_DIR} )
+message( "PROJECT_DLL " ${PROJECT_DLL} )
+message( "PROJECT_SOURCE_DIR " ${PROJECT_SOURCE_DIR} )
+
+if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+  SET( LINUX 1)
+  SET( APPLE 0)
+elseif(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+  SET( LINUX 0)
+  SET( APPLE 1 ) 
+elseif(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
+  SET( WINDOWS 1)
+endif()
+
+find_package(OpenGL REQUIRED)
+
+
+if(APPLE OR LINUX)
+find_package(GLEW REQUIRED)
+endif(APPLE OR LINUX)
+
+set( GLFW_BUILD_EXAMPLES OFF CACHE BOOL "turn off build examples") 
+add_subdirectory(glfw)
+link_directories(${PROJECT_BINARY_DIR})
+link_directories(${GLFW_BINARY_DIR})
+
+if(WINDOWS)
+link_directories(${PROJECT_SOURCE_DIR}/glew/lib/)
+endif(WINDOWS)
+
+if(SRC)
+  get_filename_component(target ${SRC} NAME_WE)
+  add_executable(${target} ${SRC} )
+  
+  set_target_properties(${target}
+    PROPERTIES
+    CXX_STANDARD 17
+    CXX_STANDARD_REQUIRED ON
+  )
+	if(WINDOWS)
+		target_link_libraries(${target} glfw glew32 ${GLFW_LIBRARIES} ) 
+	else()
+		target_link_libraries(${target} glfw ${GLEW_LIBRARY} ${GLFW_LIBRARIES} ) 
+	endif(WINDOWS)
+else()
+  file( GLOB EXAMPLES src/*.cpp )
+  foreach( srcfile ${EXAMPLES} )
+    get_filename_component(target ${srcfile} NAME_WE)
+    if(target)
+    add_executable(${target} ${srcfile} )
+	set_target_properties(${target}
+      PROPERTIES
+      CXX_STANDARD 17
+      CXX_STANDARD_REQUIRED ON
+    )
+	if(WINDOWS)
+		target_link_libraries(${target} glfw glew32 ${GLFW_LIBRARIES} ) 
+	else()
+		target_link_libraries(${target} glfw ${GLEW_LIBRARY} ${GLFW_LIBRARIES} ) 
+	endif(WINDOWS)
+	endif(target)  
+  endforeach( srcfile ${EXAMPLES} )
+endif()
+#file (GLOB         PROJECT_DLL dll/glew32.dll)
+
+include_directories(${PROJECT_SOURCE_DIR}/include/)
+include_directories(${PROJECT_SOURCE_DIR})
+include_directories(${PROJECT_SOURCE_DIR}/glfw/include/)
+include_directories(${PROJECT_SOURCE_DIR}/glm/glm/)
+include_directories(${PROJECT_SOURCE_DIR}/glew/include/)
+file(COPY  ${PROJECT_SOURCE_DIR}/include/vertex.vert DESTINATION ${PROJECT_BINARY_DIR}/bin)
+file(COPY  ${PROJECT_SOURCE_DIR}/include/fragment.frag DESTINATION ${PROJECT_BINARY_DIR}/bin)
+file(COPY  ${PROJECT_SOURCE_DIR}/include/shaders/base.shader DESTINATION ${PROJECT_BINARY_DIR}/bin/include/shaders)
+configure_file(${PROJECT_SOURCE_DIR}/include/vertex.vert ${PROJECT_BINARY_DIR}/bin/vertex.vert COPYONLY)
+configure_file(${PROJECT_SOURCE_DIR}/include/fragment.frag ${PROJECT_BINARY_DIR}/bin/fragment.frag COPYONLY)
+configure_file(${PROJECT_SOURCE_DIR}/include/shaders/base.shader ${PROJECT_BINARY_DIR}/bin/include/shaders/base.shader COPYONLY)
+
+
+if(WINDOWS)
+include_directories(${PROJECT_SOURCE_DIR}/glew/include/)
+file(COPY  ${PROJECT_SOURCE_DIR}/dll/glew32.dll DESTINATION ${PROJECT_BINARY_DIR}/bin)
+endif(WINDOWS)
+
+if(APPLE)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -I${GLEW_INCLUDE_DIRS}")
+endif(APPLE)
+
+
+get_property(dirs DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY LINK_DIRECTORIES)
+foreach(dir ${dirs})
+  message(STATUS "dir='${dir}'")
+endforeach()
+
+]]#
+cmake_minimum_required(VERSION 3.8 FATAL_ERROR)
+set(projectname GLfiddle)
+project(${projectname})
+
+set(CMAKE_BUILD_TYPE Debug)
+
+# Application
+add_executable(${projectname} "${CMAKE_SOURCE_DIR}/src/main.cpp")
+message("CMAKE_SOURCE_DIR: " ${CMAKE_SOURCE_DIR})
+
+
+find_package(OpenGL REQUIRED)
+
+
+set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "turn off build examples") 
+add_subdirectory(glfw)
+link_directories(${CMAKE_BINARY_DIR})
+link_directories(${GLFW_BINARY_DIR})
+message("GLFW_BINARY_DIR: " ${GLFW_BINARY_DIR})
+
+#add_subdirectory(glm) -- GLM is a header only library, no need to build it. Set the option GLM_TEST_ENABLE with ON to build and run the test bench
+
+target_sources(${projectname}
+    PRIVATE "${CMAKE_SOURCE_DIR}/src/Renderer.cpp"
+    PRIVATE "${CMAKE_SOURCE_DIR}/src/VertexBuffer.cpp"
+    PRIVATE "${CMAKE_SOURCE_DIR}/src/IndexBuffer.cpp"
+)
+
+set_target_properties(${projectname}
+    PROPERTIES
+    CXX_STANDARD 17
+    CXX_STANDARD_REQUIRED ON
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/.."
+    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/.."
+)
+message("CMAKE_BINARY_DIR: " ${CMAKE_BINARY_DIR})
+
+target_include_directories(${projectname}
+    PRIVATE "${CMAKE_SOURCE_DIR}/include"
+	PRIVATE "${CMAKE_SOURCE_DIR}/glew/include"
+	PRIVATE "${CMAKE_SOURCE_DIR}/glfw/include"
+	PRIVATE "${CMAKE_SOURCE_DIR}/glm/glm"
+)
+
+
+if (MSVC)
+
+link_directories(${CMAKE_SOURCE_DIR}/glew/lib/)
+	file(COPY  ${CMAKE_SOURCE_DIR}/dll/glew32.dll DESTINATION ${CMAKE_BINARY_DIR}/bin)
+	file(COPY  ${CMAKE_SOURCE_DIR}/glew/ DESTINATION ${CMAKE_BINARY_DIR}/glew/)	
+	file(COPY  ${CMAKE_SOURCE_DIR}/dll/ DESTINATION ${CMAKE_BINARY_DIR}/glew)	
+	
+	set(GLEW_LIBRARY glew/lib/glew32)
+	set(GLEW_INCLUDE_DIRS glew/include)
+	add_definitions(-DGLEW_STATIC)
+endif(MSVC)
+
+target_link_libraries(${projectname} glfw ${GLEW_LIBRARY} ${GLFW_LIBRARIES} ) 
+message("GLEW_LIBRARY: " ${GLEW_LIBRARY})
+message("GLFW_LIBRARIES: " ${GLFW_LIBRARIES})
+
+#get_property(dirs DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY LINK_DIRECTORIES)
+foreach(dir ${GLFW_LIBRARIES})
+  message("dir='${dir}'")
+endforeach()
+message("============================================= END OF CMakeLists.txt =============================================\n\n")
