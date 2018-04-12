@@ -11,7 +11,6 @@
 #include <shader.hpp>
 #include <texture.hpp>
 #include <matrixUtil.hpp>
-#include <shaderParser.hpp>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -21,112 +20,6 @@
 #include <sstream>
 #include <string>
 
-struct ShaderFile
-{
-    std::string vert;
-    std::string frag;
-    std::string geom;
-    ///Shader ...
-};
-
-static ShaderFile ParseShader(const std::string& shader)
-{
-    enum ShaderType{ NONE = -1, VERT = 0, FRAG = 1, GEOM = 2 };
-
-    std::ifstream stream(shader);
-    ShaderType type;
-    std::string line;
-    std::stringstream ss[3];
-    
-    while (getline(stream, line))
-    {
-        if (line.find("#shader") != std::string::npos)
-        {
-            if (line.find("vert") != std::string::npos)
-            {
-                type = VERT;
-            }
-            else if(line.find("frag") != std::string::npos)
-            {
-                type = FRAG;
-            }
-            else if (line.find("geom") != std::string::npos)
-            {
-                type = GEOM;
-            }
-        }
-        else 
-        {
-            ss[(int)type] << line << '\n';
-        }
-    }
-
-    return ShaderFile
-    {
-        ss[(int)VERT].str(),
-        ss[(int)FRAG].str(),
-        ss[(int)GEOM].str() 
-    };
-}
-static unsigned int CompileShader(unsigned int type, const std::string& source)
-{
-    unsigned int id;
-    GLCall(id = glCreateShader(type));
-    const char* src = source.c_str();
-    GLCall(glShaderSource(id, 1, &src, nullptr)); //TODO understand
-    GLCall(glCompileShader(id));
-    
-    int result;
-    GLCall(glGetShaderiv(id, GL_COMPILE_STATUS, &result));
-    if (!result)
-    {
-        int length;
-        GLCall(glGetShaderiv(id, GL_INFO_LOG_LENGTH, &length));
-        char* message = (char*)alloca(length * sizeof(char));
-        GLCall(glGetShaderInfoLog(id, length, &length, message));
-        std::cout << "Failed to compile shader: " << ShaderTypeName(type) << std::endl;
-        std::cout << message << std::endl;
-        GLCall(glDeleteShader(id));
-
-        std::cin.get();
-        return 0;
-    }
-    
-    return id;
-}
-static unsigned int CreateShader(const std::string& vert, const std::string& frag, const std::string& geom)
-{
-    unsigned int program; GLCall(program = glCreateProgram());
-    unsigned int vs, fs, gs;
-    if (!vert.empty())
-    {
-        vs = CompileShader(GL_VERTEX_SHADER, vert);
-        GLCall(glAttachShader(program, vs));
-
-        GLCall(glDeleteShader(vs));
-    }
-    if (!frag.empty())
-    {
-        fs = CompileShader(GL_FRAGMENT_SHADER, frag);
-        GLCall(glAttachShader(program, fs));
-
-        GLCall(glDeleteShader(fs));
-    }
-    if (!geom.empty())
-    {
-        gs = CompileShader(GL_GEOMETRY_SHADER, geom);
-        GLCall(glAttachShader(program, gs));
-
-        GLCall(glDeleteShader(gs));
-    }
-
-    GLCall(glLinkProgram(program));
-    GLCall(glValidateProgram(program));
-
-    
-    return program;
-}
-
 static void OnInputKeyPress(GLFWwindow* window, int keyCode, int scanCode, int mods)
 {
     printf("Pressing %i, as char: %c\n", keyCode, char(keyCode));
@@ -134,7 +27,7 @@ static void OnInputKeyPress(GLFWwindow* window, int keyCode, int scanCode, int m
     {
         glfwSetWindowShouldClose(window, 1);
     }
-   
+
 }
 static void OnInputKeyHold(GLFWwindow* window, int keyCode, int scanCode, int mods)
 {
@@ -219,48 +112,48 @@ int main(int argc, char* args[])
     };
 
     Vertex vertices[] = {
-        { { -0.5f, -0.5f,  0.5f }, { 1 },  { 0, 0 }, { 255,     255-96,  255-192, 255 } },
-        { {  0.5f, -0.5f,  0.5f }, { 1 },  { 1, 0 }, { 255-16,  255-112, 255-208, 255 } },
-        { {  0.5f,  0.5f,  0.5f }, { 1 },  { 1, 1 }, { 255-32,  255-128, 255-224, 255 } },
-        { { -0.5f,  0.5f,  0.5f }, { 1 },  { 0, 1 }, { 255-48,  255-144, 255-240, 255 } },
-                                   
-        { { -0.5f, -0.5f, -0.5f }, { 1 },  { 1, 0 }, { 255-64,  255-160, 255-255, 255 } },
-        { { -0.5f,  0.5f, -0.5f }, { 1 },  { 1, 1 }, { 255-80,  255-176, 255, 255 } },
-        
-        { {  0.5f, -0.5f, -0.5f }, { 1 },  { 0, 0 }, { 255-96,  255-192, 255-16, 255 } },
-        { {  0.5f,  0.5f, -0.5f }, { 1 },  { 0, 1 }, { 255-112, 255-208, 255-32, 255 } },
+        { { -0.5f, -0.5f,  0.5f },  1,  { 0, 0 }, { 255,     255-96,  255-192, 255 } },
+        { {  0.5f, -0.5f,  0.5f },  1,  { 1, 0 }, { 255-16,  255-112, 255-208, 255 } },
+        { {  0.5f,  0.5f,  0.5f },  1,  { 1, 1 }, { 255-32,  255-128, 255-224, 255 } },
+        { { -0.5f,  0.5f,  0.5f },  1,  { 0, 1 }, { 255-48,  255-144, 255-240, 255 } },
 
-        { { -0.5f, -0.5f, -0.5f }, { 1 },  { 0, 1 }, { 255-128, 255-224, 255-48, 255 } },
-        { {  0.5f, -0.5f, -0.5f }, { 1 },  { 1, 1 }, { 255-144, 255-240, 255-64, 255 } },
+        { { -0.5f, -0.5f, -0.5f },  1,  { 1, 0 }, { 255-64,  255-160, 255-255, 255 } },
+        { { -0.5f,  0.5f, -0.5f },  1,  { 1, 1 }, { 255-80,  255-176, 255, 255 } },
 
-        { { -0.5f,  0.5f, -0.5f }, { 1 },  { 0, 0 }, { 255-160, 255-255,  255-80, 255 } },
-        { {  0.5f,  0.5f, -0.5f }, { 1 },  { 1, 0 }, { 255-176, 255,      255-96, 255 } },
-        
-        { { -0.5f,  0.5f,  0.5f }, { 1 },  { 0, 1 }, { 255-192, 255-16,   255-112, 255 } },
-        { {  0.5f,  0.5f,  0.5f }, { 1 },  { 1, 1 }, { 255-208, 255-32,   255-128, 255 } },
+        { {  0.5f, -0.5f, -0.5f },  1,  { 0, 0 }, { 255-96,  255-192, 255-16, 255 } },
+        { {  0.5f,  0.5f, -0.5f },  1,  { 0, 1 }, { 255-112, 255-208, 255-32, 255 } },
 
+        { { -0.5f, -0.5f, -0.5f },  1,  { 0, 1 }, { 255-128, 255-224, 255-48, 255 } },
+        { {  0.5f, -0.5f, -0.5f },  1,  { 1, 1 }, { 255-144, 255-240, 255-64, 255 } },
 
+        { { -0.5f,  0.5f, -0.5f },  1,  { 0, 0 }, { 255-160, 255-255,  255-80, 255 } },
+        { {  0.5f,  0.5f, -0.5f },  1,  { 1, 0 }, { 255-176, 255,      255-96, 255 } },
+
+        { { -0.5f,  0.5f,  0.5f },  1,  { 0, 1 }, { 255-192, 255-16,   255-112, 255 } },
+        { {  0.5f,  0.5f,  0.5f },  1,  { 1, 1 }, { 255-208, 255-32,   255-128, 255 } },
 
 
-        { { -1.0f, -1.0f,  1.0f }, { 1 },  { 0, 0 }, { 255, 255, 255, 80 } },
-        { {  1.0f, -1.0f,  1.0f }, { 1 },  { 1, 0 }, { 255, 255, 255, 80 } },
-        { {  1.0f,  1.0f,  1.0f }, { 1 },  { 1, 1 }, { 255, 255, 255, 80 } },
-        { { -1.0f,  1.0f,  1.0f }, { 1 },  { 0, 1 }, { 255, 255, 255, 80 } },
-        
-        { { -1.0f, -1.0f, -1.0f }, { 1 },  { 1, 0 }, { 255, 255, 255, 80 } },
-        { { -1.0f,  1.0f, -1.0f }, { 1 },  { 1, 1 }, { 255, 255, 255, 80 } },
-        
-        { {  1.0f, -1.0f, -1.0f }, { 1 },  { 0, 0 }, { 255, 255, 255, 80 } },
-        { {  1.0f,  1.0f, -1.0f }, { 1 },  { 0, 1 }, { 255, 255, 255, 80 } },
-        
-        { { -1.0f, -1.0f, -1.0f }, { 1 },  { 0, 1 }, { 255, 255, 255, 80 } },
-        { {  1.0f, -1.0f, -1.0f }, { 1 },  { 1, 1 }, { 255, 255, 255, 80 } },
 
-        { { -1.0f,  1.0f, -1.0f }, { 1 },  { 0, 0 }, { 255, 255, 255, 80 } },
-        { {  1.0f,  1.0f, -1.0f }, { 1 },  { 1, 0 }, { 255, 255, 255, 80 } },
 
-        { { -1.0f,  1.0f,  1.0f }, { 1 },  { 0, 1 }, { 255, 255, 255, 80 } },
-        { {  1.0f,  1.0f,  1.0f }, { 1 },  { 1, 1 }, { 255, 255, 255, 80 } },
+        { { -1.0f, -1.0f,  1.0f },  1,  { 0, 0 }, { 255, 255, 255, 80 } },
+        { {  1.0f, -1.0f,  1.0f },  1,  { 1, 0 }, { 255, 255, 255, 80 } },
+        { {  1.0f,  1.0f,  1.0f },  1,  { 1, 1 }, { 255, 255, 255, 80 } },
+        { { -1.0f,  1.0f,  1.0f },  1,  { 0, 1 }, { 255, 255, 255, 80 } },
+
+        { { -1.0f, -1.0f, -1.0f },  1,  { 1, 0 }, { 255, 255, 255, 80 } },
+        { { -1.0f,  1.0f, -1.0f },  1,  { 1, 1 }, { 255, 255, 255, 80 } },
+
+        { {  1.0f, -1.0f, -1.0f },  1,  { 0, 0 }, { 255, 255, 255, 80 } },
+        { {  1.0f,  1.0f, -1.0f },  1,  { 0, 1 }, { 255, 255, 255, 80 } },
+
+        { { -1.0f, -1.0f, -1.0f },  1,  { 0, 1 }, { 255, 255, 255, 80 } },
+        { {  1.0f, -1.0f, -1.0f },  1,  { 1, 1 }, { 255, 255, 255, 80 } },
+
+        { { -1.0f,  1.0f, -1.0f },  1,  { 0, 0 }, { 255, 255, 255, 80 } },
+        { {  1.0f,  1.0f, -1.0f },  1,  { 1, 0 }, { 255, 255, 255, 80 } },
+
+        { { -1.0f,  1.0f,  1.0f },  1,  { 0, 1 }, { 255, 255, 255, 80 } },
+        { {  1.0f,  1.0f,  1.0f },  1,  { 1, 1 }, { 255, 255, 255, 80 } },
 
     };
 
@@ -320,11 +213,11 @@ int main(int argc, char* args[])
     auto va = new VertexArray();
 
     auto vbuf = VertexBuffer(vertices, 14*2 * sizeof(Vertex));
-    
+
     //TODO
     // VetexBufferLayout
     // glVertexAttribPointer(location, items, type, normalized, stride, start);
-    
+
     auto vbufLayout = VertexBufferAttribLayout();
 
     vbufLayout.push(3, GL_FLOAT);                       //position;
@@ -344,13 +237,13 @@ int main(int argc, char* args[])
     //ParseShaderFile("../include/shaders/base.shader");
 
     //auto[vert, frag, geom] = ParseShader("../include/shaders/base.shader");
-    
+
 
     //auto shader = CreateShader(vert, frag, geom);
 
     //auto[v2, f2, g2] = ParseShader("../include/shaders/edge.shader");
     //auto shader2 = CreateShader(v2, f2, g2);
-   
+
     glm::mat4 projection = glm::perspective(90.0f, (GLfloat)1024 / (GLfloat)1024, 0.1f, 100.0f);
 
     //SCALE -> ROTATE -> TRANSLATE
@@ -358,7 +251,7 @@ int main(int argc, char* args[])
     //GLCall(glSetUn)
     GLint uniformMVP, uniformTime;
     GLint uniformMVP2, uniformTime2;
-    
+
     shader.bind({});
     uniformMVP  = shader.getUniformLocation("projection");
     uniformTime = shader.getUniformLocation("time");
@@ -381,10 +274,10 @@ int main(int argc, char* args[])
 
     //GLCall(uniformTex = glGetUniformLocation(GLuint(shader), "mainTex"));
     GLCall(glUniform1i(uniformTex, 0));
-    
+
     glfwSetKeyCallback(window, OnInputKey); //set upp callbacks
     glfwSetCursorPosCallback(window, OnCursorHover);
-    
+
     while (!glfwWindowShouldClose(window))
     {
         renderer->clear();
@@ -395,7 +288,7 @@ int main(int argc, char* args[])
         shader.bind({});
         GLCall(glUniformMatrix4fv(uniformMVP, 1, GL_FALSE, glm::value_ptr(projection)));
         GLCall(glUniform1f(uniformTime, (float)glfwGetTime()));
-        
+
         //GLCall(glUseProgram(shader2));
         //GLCall(glUniformMatrix4fv(uniformMVP2, 1, GL_FALSE, glm::value_ptr(projection)));
         //GLCall(glUniform1f(uniformTime2, (float)glfwGetTime()));

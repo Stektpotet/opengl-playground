@@ -1,13 +1,13 @@
 #shader vertex
-#version 410 core
+#version 410
 
 layout(location = 0) in vec4 position;
 layout(LOCATION = 1) in vec3 normal;
 layout(location = 2) in vec2 uv;
 layout(location = 3) in vec4 vertex_color_from_program;
 
-out vec2 texCoord;
-out vec4 vertex_color_out;
+flat out vec2 texCoord;
+smooth out vec4 vertex_color_out;
 out vec4 pos;
 
 uniform mat4 projection = mat4(1, 0, 0, 0,
@@ -33,9 +33,9 @@ mat4 modelToWorld(mat3 transform) {
         transform[0][0], 0,               0,               0,
         0,               transform[0][1], 0,               0,
         0,               0,               transform[0][2], 0,
-        0,               0,               0,               1 
+        0,               0,               0,               1
     );
-    
+
     m = scale * m;
     m = rotate(transform[1][0], transform[1][1], transform[1][2]) * m;
 
@@ -51,7 +51,7 @@ mat4 modelToWorld(mat3 transform) {
 
 
 void main() {
-    
+
 // model to world space transformations = transform
 // translation * rotation * scale * vertexPos;
 
@@ -73,11 +73,11 @@ void main() {
 }
 
 #shader fragment
-#version 410 core
+#version 410
 in vec4 gl_FragCoord;
 in vec2 gl_PointCoord;
-in vec2 texCoord;
-in vec4 vertex_color_out;
+flat in vec2 texCoord;
+smooth in vec4 vertex_color_out;
 in vec4 pos;
 out vec4 out_color;
 

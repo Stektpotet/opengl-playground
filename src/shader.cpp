@@ -33,7 +33,7 @@ void Shader::construct(const std::string& vert, const std::string& frag, const s
         std::cin.get();
         return;
     }
-   
+
     ///https://stackoverflow.com/questions/440144/in-opengl-is-there-a-way-to-get-a-list-of-all-uniforms-attribs-used-by-a-shade
     GLint i;
     GLint count;
@@ -52,12 +52,12 @@ void Shader::construct(const std::string& vert, const std::string& frag, const s
     {
         GLCall(glGetActiveAttrib(id, (GLuint)i, bufSize, &length, &size, &type, name));
         printf("Attribute #%d Type: %u Name: %s\n", i, type, name);
-        
+
     }
 
     GLCall(glGetProgramiv(id, GL_ACTIVE_UNIFORMS, &count));
     std::cout << "\nActive uniforms: " << count << std::endl;
-    
+
     for (i = 0; i < count; i++)
     {
         GLCall(glGetActiveUniform(id, (GLuint)i, bufSize, &length, &size, &type, name));
@@ -87,7 +87,7 @@ Shader::Shader(const std::string& filePath)
 Shader::~Shader()
 {
     unbind();
-    GLCall(glDeleteShader(id))
+    GLCall(glDeleteShader(id));
 }
 
 Shader::operator GLuint() const
@@ -180,7 +180,7 @@ static ShaderSource ParseProgram(const std::string& file)
         }
     }
     return
-    {
+    ShaderSource {
         ss[(int)VERT].str(),
         ss[(int)FRAG].str(),
         ss[(int)GEOM].str()

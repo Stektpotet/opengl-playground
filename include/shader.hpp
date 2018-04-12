@@ -8,14 +8,16 @@
 #include <gl_caller.hpp>
 
 #include <material.hpp>
+#include <tuple>
 
+using ShaderSource = std::tuple<std::string, std::string, std::string>;
 
-struct ShaderSource
-{
-    std::string vertex;
-    std::string fragment;
-    std::string geometry;
-};
+// struct ShaderSource
+// {
+//     std::string vertex;
+//     std::string fragment;
+//     std::string geometry;
+// };
 class Shader
 {
     struct Uniform
@@ -33,7 +35,7 @@ private:
 public:
 
     explicit operator GLuint() const;
-    
+
     Shader(const std::string& vert, const std::string& frag, const std::string& geom);
     Shader(const std::string& filePath);
     ~Shader();
