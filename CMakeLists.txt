@@ -16,9 +16,7 @@ set(GLFW_BUILD_DOCS 0)
 # Adding subdirectory, building the glfw library which we will
 # link to later on.
 add_subdirectory("${CMAKE_SOURCE_DIR}/glfw")
-
 add_subdirectory("${CMAKE_SOURCE_DIR}/SOIL")
-
 
 # Find system packages
 find_package(OpenGL REQUIRED)
@@ -34,8 +32,8 @@ set_target_properties(
     PROPERTIES
     CXX_STANDARD 17
     CXX_STANDARD_REQUIRED ON
-    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
-    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}"
+    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib"
 )
 
 target_sources(
@@ -99,7 +97,6 @@ target_include_directories(
     PRIVATE ${CMAKE_SOURCE_DIR}/glm         #Not glm/gml??
     PRIVATE ${CMAKE_SOURCE_DIR}/glfw/include
     PRIVATE ${CMAKE_SOURCE_DIR}/SOIL/src
-
 )
 
 target_link_libraries(
@@ -110,6 +107,13 @@ target_link_libraries(
     PRIVATE SOIL ${SOIL_LIBRARIES}
 )
 endif()
+
+
+add_custom_command(
+    TARGET GLprog POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+    ${CMAKE_SOURCE_DIR}/assets $<TARGET_FILE_DIR:GLprog>/assets
+)
 
 message(OPENGL_LIBRARIES ${OPENGL_LIBRARIES})
 message(GLEW_LIBRARY ${GLEW_LIBRARY})

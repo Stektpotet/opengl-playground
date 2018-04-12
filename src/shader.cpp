@@ -80,7 +80,7 @@ Shader::Shader(const std::string& vert, const std::string& frag, const std::stri
 
 Shader::Shader(const std::string& filePath)
 {
-    const auto[vert, frag, geom] = ParseProgram(filePath);
+    auto[vert, frag, geom] = ParseProgram(filePath);
     construct(vert, frag, geom);
 }
 

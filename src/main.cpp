@@ -225,7 +225,7 @@ int main(int argc, char* args[])
     vbufLayout.push(2, GL_SHORT);                       //uv
     vbufLayout.push(4, GL_UNSIGNED_BYTE, GL_TRUE);      //color;
 
-    Shader shader("../include/shaders/base.shader");
+    Shader shader("assets/shaders/base.shader");
 
     //auto vbufLayout = CreateFromProgram(GLuint(shader));
 
@@ -234,14 +234,14 @@ int main(int argc, char* args[])
 
     auto ebuf = new ElementBuffer(indicies, 36*2);
 
-    //ParseShaderFile("../include/shaders/base.shader");
+    //ParseShaderFile("assets/shaders/base.shader");
 
-    //auto[vert, frag, geom] = ParseShader("../include/shaders/base.shader");
+    //auto[vert, frag, geom] = ParseShader("assets/shaders/base.shader");
 
 
     //auto shader = CreateShader(vert, frag, geom);
 
-    //auto[v2, f2, g2] = ParseShader("../include/shaders/edge.shader");
+    //auto[v2, f2, g2] = ParseShader("assets/shaders/edge.shader");
     //auto shader2 = CreateShader(v2, f2, g2);
 
     glm::mat4 projection = glm::perspective(90.0f, (GLfloat)1024 / (GLfloat)1024, 0.1f, 100.0f);
@@ -265,7 +265,7 @@ int main(int argc, char* args[])
     GLCall(uniformTime2 = glGetUniformLocation(shader2, "time"));
     GLCall(glUniformMatrix4fv(uniformMVP2, 1, GL_FALSE, glm::value_ptr(projection)));*/
 
-    auto tex = Texture("../res/textures/Checkers.jpg");
+    auto tex = Texture("assets/textures/Checkers.jpg");
     tex.bind();
     GLint uniformTex;
     shader.bind({});

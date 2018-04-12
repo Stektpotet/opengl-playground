@@ -6,7 +6,7 @@ layout(LOCATION = 1) in vec3 normal;
 layout(location = 2) in vec2 uv;
 layout(location = 3) in vec4 vertex_color_from_program;
 
-flat out vec2 texCoord;
+noperspective out vec2 texCoord;
 smooth out vec4 vertex_color_out;
 out vec4 pos;
 
@@ -76,7 +76,7 @@ void main() {
 #version 410
 in vec4 gl_FragCoord;
 in vec2 gl_PointCoord;
-flat in vec2 texCoord;
+noperspective in vec2 texCoord;
 smooth in vec4 vertex_color_out;
 in vec4 pos;
 out vec4 out_color;

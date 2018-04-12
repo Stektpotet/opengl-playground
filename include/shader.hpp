@@ -10,14 +10,14 @@
 #include <material.hpp>
 #include <tuple>
 
-using ShaderSource = std::tuple<std::string, std::string, std::string>;
+// using ShaderSource = std::tuple<std::string, std::string, std::string>;
 
-// struct ShaderSource
-// {
-//     std::string vertex;
-//     std::string fragment;
-//     std::string geometry;
-// };
+struct ShaderSource
+{
+    std::string vertex;
+    std::string fragment;
+    std::string geometry;
+};
 class Shader
 {
     struct Uniform
